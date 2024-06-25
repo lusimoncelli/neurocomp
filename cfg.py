@@ -1,7 +1,7 @@
 import os
 
 data_dir = "study-forrest/"
-subs = [f'sub-0{i}' for i in range(10)]
+subs = [f'sub-0{i}' for i in range(1,7)]
 
 raw_data_name = data_dir + "ds000113/"
 fnames_data = [ f'{raw_data_name}{s}/ses-movie/func/{s}_ses-movie_task-movie_run-1_bold.nii.gz' for s in subs]
