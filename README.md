@@ -12,3 +12,5 @@ datalad get sub-*/ses-movie/func/*_ses-movie_task-movie_run-1_bold.nii.gz
 ```
 
 3. Run `cfg.py` and then `split.py`
+4. Resample mask size to match the desired size by running `resamplemask.py`
+5. Run `functional_space.py` to convert the forrest train and test data form anatomical space to functional space.
