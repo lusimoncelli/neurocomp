@@ -10,8 +10,16 @@ numpy = "*"
 scipy = "*"
 pandas = "*"
 nibabel = "*"
+pytensor = "*"
+mpi4py = "*"
+utils = "*"
+psutil = "*"
+statsmodels = "*"
 
 [dev-packages]
 
 [requires]
 python_version = "3.12"
+
+[pipenv]
+allow_prereleases = true
