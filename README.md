@@ -8,7 +8,8 @@ mkdir study-forrest
 cd study-forrest
 datalad install https://github.com/OpenNeuroDatasets/ds000113
 cd ds000113
-datalad get sub-*/ses-movie/func/*_ses-movie_task-movie_run-1_bold.nii.gz
+datalad get sub-01/ses-movie/func/sub-01_ses-movie_task-movie_run-*_bold.nii.gz
+datalad get sub-02/ses-movie/func/sub-02_ses-movie_task-movie_run-*_bold.nii.gz
 ```
 
 3. Run `cfg.py` and then `split.py`
