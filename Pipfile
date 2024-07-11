@@ -15,6 +15,11 @@ mpi4py = "*"
 utils = "*"
 psutil = "*"
 statsmodels = "*"
+nilearn = "*"
+matplotlib = "*"
+transformers = "*"
+torch = "*"
+seaborn = "*"
 
 [dev-packages]
 
