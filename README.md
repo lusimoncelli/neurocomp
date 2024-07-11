@@ -10,6 +10,7 @@ datalad install https://github.com/OpenNeuroDatasets/ds000113
 cd ds000113
 datalad get sub-01/ses-movie/func/sub-01_ses-movie_task-movie_run-*_bold.nii.gz
 datalad get sub-02/ses-movie/func/sub-02_ses-movie_task-movie_run-*_bold.nii.gz
+datalad get stimuli/annotations/german_audio_description.csv
 ```
 
 3. Run `cfg.py` and then `split.py`
