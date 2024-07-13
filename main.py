@@ -13,6 +13,7 @@ from transformers import BertTokenizer, BertModel
 import torch
 import spacy
 from tqdm import tqdm
+from sklearn.metrics.pairwise import cosine_similarity
 
 reduced_dir ='./reduced/'
 sub_count = 20
@@ -53,7 +54,7 @@ def load_sub(sub_no):
     return reduced
 
 
-if __name__ == '__main__':
+def load_all():
     for i in range(0, 20):
         print(f'Loading sub {i}')
         try:
@@ -63,7 +64,7 @@ if __name__ == '__main__':
             print(f'Failed loading sub {i}')
 
 
-if __name__ != "__main__":
+if __name__ == '__main__':
     print('*'*10)
     if not os.path.exists(reduced_dir):
         os.mkdir(reduced_dir)
@@ -111,11 +112,26 @@ if __name__ != "__main__":
     aligned_embeddings = np.array(aligned_embeddings)
 
     # ajusto el modelo lineal
-    test_subs = 4
-    reg.fit(reduced[:4], aligned_embeddings)
-    reg = LinearRegression()
+    training_subs = 100
+    training_set = np.reshape(reduced[:training_subs], (reduced.shape[1]*training_subs, reduced.shape[-1]))
+    ys = np.tile(aligned_embeddings.T, 10).T
+    print('Test shape: ', training_set.shape)
+    print('Expected shape: ', ys.shape)
 
-    red2 = load_sub(2)
-    prediction = reg.predict(red2[0])
+    reg = LinearRegression()
+    reg.fit(training_set, ys)
+
+    thresh = 0.8
+    for i, red in enumerate(reduced):
+        prediction = reg.predict(red)
+        similarity = cosine_similarity(prediction, aligned_embeddings)
+        correct_predictions = np.sum(np.diag(similarity) >= thresh)
+        total_predictions = similarity.shape[0]
+        accuracy = correct_predictions / total_predictions * 100
+        s = '' if i <= training_subs else 'not '
+        print(f'Accuracy for sub {i} ({s}part of the training set): ', f'{accuracy:.2f}%')
+
+
+    
 
     
