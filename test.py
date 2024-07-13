@@ -1,8 +1,4 @@
 import numpy as np
-import os
-
-path = './reduced'
 
 if __name__ == '__main__':
-    arr = np.arange(1, 10)
-    print(arr[1:])
+    print(np.linalg.norm(np.arange(10)-np.arange(0, 20, 2)))

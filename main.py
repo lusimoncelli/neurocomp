@@ -7,10 +7,13 @@ from nilearn.decoding import SearchLight
 from nilearn.input_data import NiftiMasker
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.svm import SVR
 import pandas as pd
 import matplotlib.pyplot as plt
 from transformers import BertTokenizer, BertModel
-import torch
+import xgboost as xgb
 import spacy
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
@@ -63,6 +66,33 @@ def load_all():
         except:
             print(f'Failed loading sub {i}')
 
+def accuracy(actual, predicted):
+    thresh = 0.75
+
+    similarity = cosine_similarity(predicted, actual)
+    correct_predictions = np.sum(np.diag(similarity) >= thresh)
+    total_predictions = similarity.shape[0]
+    return correct_predictions / total_predictions * 100
+
+def add_value_labels(bars):
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            height,
+            f'{height:.2f}%',
+            ha='center',
+            va='bottom'
+        )
+
+def closest(aligned_embeddings, predicted_embedding):
+    idx, min = -1, np.inf
+    for i, e in enumerate(aligned_embeddings):
+        dist = np.linalg.norm(predicted_embedding - e)
+        if dist < min:
+            idx = i
+            min = dist
+    return idx
 
 if __name__ == '__main__':
     print('*'*10)
@@ -111,27 +141,62 @@ if __name__ == '__main__':
 
     aligned_embeddings = np.array(aligned_embeddings)
 
-    # ajusto el modelo lineal
-    training_subs = 100
-    training_set = np.reshape(reduced[:training_subs], (reduced.shape[1]*training_subs, reduced.shape[-1]))
-    ys = np.tile(aligned_embeddings.T, 10).T
-    print('Test shape: ', training_set.shape)
-    print('Expected shape: ', ys.shape)
+    training_subs_sets = [10]
+    for training_subs in training_subs_sets:
+        np.random.shuffle(reduced)
+        print(f'Test subjects: {training_subs}')
+        training_set = np.reshape(reduced[:training_subs], (reduced.shape[1]*training_subs, reduced.shape[-1]))
+        ys = np.tile(aligned_embeddings.T, training_subs).T
+        print('Test shape: ', training_set.shape)
+        print('Expected shape: ', ys.shape)
 
-    reg = LinearRegression()
-    reg.fit(training_set, ys)
+        models = [
+            LinearRegression(), 
+            # RandomForestRegressor(n_estimators=100, random_state=21), 
+            # xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5),
+            ]
+        model_names = ['lin', 'rf', 'xgb']
+        results = {}
 
-    thresh = 0.8
-    for i, red in enumerate(reduced):
-        prediction = reg.predict(red)
-        similarity = cosine_similarity(prediction, aligned_embeddings)
-        correct_predictions = np.sum(np.diag(similarity) >= thresh)
-        total_predictions = similarity.shape[0]
-        accuracy = correct_predictions / total_predictions * 100
-        s = '' if i <= training_subs else 'not '
-        print(f'Accuracy for sub {i} ({s}part of the training set): ', f'{accuracy:.2f}%')
+        for name, model in zip(model_names, models):
+            model.fit(training_set, ys)
 
+            train_acc, test_acc = [], []
+            for i, red in enumerate(reduced):
+                predicted = model.predict(red)
+                acc = accuracy(aligned_embeddings, predicted)
+                train_acc.append(acc) if i < training_subs else test_acc.append(acc)        
+                        
+            results[name] = np.mean(train_acc), np.mean(test_acc)
 
-    
+        labels = list(results.keys())
+        values = np.array(list(results.values()))
 
+        # Number of entries
+        n = len(labels)
+
+        # Create an array for the x-axis locations of the groups
+        x = np.arange(n)
+
+        # Width of the bars
+        width = 0.35
+
+        # Create the bar graph
+        fig, ax = plt.subplots()
+        bar1 = ax.bar(x - width/2, values[:, 0], width, label='Training Set')
+        bar2 = ax.bar(x + width/2, values[:, 1], width, label='Test Set')
+
+        # Add labels, title, and legend
+        ax.set_xlabel('Modelo')
+        ax.set_ylabel('Precisión (%)')
+        ax.set_title(f'Precisión por modelo (training set de {training_subs})')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+
+        add_value_labels(bar1)
+        add_value_labels(bar2)
+
+        # Show the plot
+        plt.savefig(f'./res_{training_subs:>02}.png')
     
