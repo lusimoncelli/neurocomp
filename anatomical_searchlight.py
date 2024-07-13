@@ -51,11 +51,6 @@ data = nii.get_fdata()
 mask = nib.load("3mm_mask.nii.gz").get_fdata()
 
 
-
-
-
-
-
 # Pull out the MPI information
 comm = MPI.COMM_WORLD
 rank = comm.rank
@@ -119,9 +114,6 @@ def decode(data,mask,myrad,bcvar):
     ans=sum(max_idx == range(25)) / 25.0
     print(ans)
     return ans
-
-
-
 
 if kernel=='sensory_rsa':
     f=rsa
